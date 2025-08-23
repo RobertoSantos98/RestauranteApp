@@ -16,8 +16,13 @@ class CarrinhoController extends Controller
 
     public function show(string $id)
     {
-        $carrinho = $this->carrinhoService->getCarrinhoUsuario($id);
-        return response()->json($carrinho);
+        try {
+            $carrinho = $this->carrinhoService->getCarrinhoUsuario($id);
+            return response()->json($carrinho);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Usuário não encontrado'], 404);
+        }
     }
 
 }
