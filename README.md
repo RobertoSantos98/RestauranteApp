@@ -143,6 +143,8 @@ Valor calculado dinamicamente, sem precisar armazenar no banco.
 3. Teste os endpoints `/carrinho/item` para adicionar, atualizar ou remover itens.
 4. Verifique se o campo `valor_total` está correto.
 
+5. Se for preciso, adicionar -> "Accept":"application/json" no headers em qualquer post para API.
+
 ---
 
 ## Futuras Melhorias
