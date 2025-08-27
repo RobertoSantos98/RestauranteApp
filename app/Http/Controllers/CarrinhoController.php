@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\CarrinhoService;
-
+use Illuminate\Http\Request;
 
 class CarrinhoController extends Controller
 {
@@ -14,10 +14,11 @@ class CarrinhoController extends Controller
         $this->carrinhoService = $carrinhoService;
     }
 
-    public function show(string $id)
+    public function show(Request $request)
     {
         try {
-            $carrinho = $this->carrinhoService->getCarrinhoUsuario($id);
+            $user = $request->user();
+            $carrinho = $this->carrinhoService->getCarrinhoUsuario($user->id);
             return response()->json($carrinho);
 
         } catch (\Exception $e) {

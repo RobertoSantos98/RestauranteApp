@@ -25,7 +25,7 @@ class StoreUserRequest extends FormRequest
             'nome' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|confirmed',
-            'date_of_birth' => 'required|date|before:today',
+            'date_of_birth' => 'date|before:today',
         ];
     }
 }

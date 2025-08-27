@@ -24,7 +24,7 @@ class ProdutoController extends Controller
         $produto = $request->validate([
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
-            'preco' => 'required|numeric',
+            'valor' => 'required|numeric',
             'imagem' => 'nullable|string',
         ]);
 
