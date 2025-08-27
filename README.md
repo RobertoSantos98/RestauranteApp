@@ -1,61 +1,158 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# RestauranteApp
 
-## About Laravel
+API backend desenvolvida em **Laravel**, projeto de exemplo para gerenciamento de carrinho de compras com autenticação via Laravel Sanctum.
+FrontEnd Feito em ReactNative: https://github.com/RobertoSantos98/DesafioGlobalTecnologies
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+##  Visão Geral
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Usuários podem gerenciar um **carrinho de compras**, adicionar produtos, atualizar quantidades e visualizar o total.
+- A API utiliza **Laravel Sanctum** para autenticação via token **Bearer**.
+- Implementação pura Laravel (sem Repositories ou Services), utilizando **Controllers limpos e Models com lógica adequada**.
+- Domínio "User" criado junto a filosofia de clean arquitecture, separando Repository, Service (Regras de negócio) e Controller.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+##  Requisitos
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- PHP >= 8.3
+- Laravel 12
+- MySQL (ou outro banco SQL configurável via `.env`)
+- Composer
+- Laragon (ou XAMPP, WAMP, etc.)
+- Postman (para testes API)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+-Utilizei o Laragon para iniciar todos os Servers. 
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+##  Configuração Inicial
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+git clone https://github.com/RobertoSantos98/RestauranteApp.git
+cd RestauranteApp
 
-### Premium Partners
+composer install
+cp .env.example .env
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# Configure as variáveis no .env (database, APP_URL, etc.)
+php artisan key:generate
 
-## Contributing
+php artisan migrate
+````
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Autenticação com Sanctum
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. No `.env`, defina:
 
-## Security Vulnerabilities
+   ```env
+   SANCTUM_STATEFUL_DOMAINS=localhost
+   SESSION_DRIVER=cookie
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+2. No `User.php`, inclua:
 
-## License
+   ```php
+   use Laravel\Sanctum\HasApiTokens;
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+   class User extends Authenticatable
+   {
+       use HasApiTokens, HasFactory, Notifiable;
+       // ...
+   }
+   ```
+
+3. Rotas protegidas (`routes/api.php`):
+
+   ```php
+   Route::middleware('auth:sanctum')->group(function () {
+       Route::get('/carrinho', [CarrinhoController::class, 'show']);
+       Route::post('/carrinho/item', [ItemProdutoController::class, 'store']);
+       Route::put('/carrinho/item/{id}', [ItemProdutoController::class, 'update']);
+       Route::delete('/carrinho/item/{id}', [ItemProdutoController::class, 'destroy']);
+   });
+   ```
+
+4. Fluxo de token via Postman:
+
+   * **Login**:
+
+     ```json
+     POST /api/auth
+     {
+       "email": "...",
+       "password": "..."
+     }
+     ```
+
+     Retorna um `token` (Bearer).
+   * Use esse token no header `Authorization: Bearer <token>` para acessar os endpoints acima.
+
+---
+
+## Endpoints da API
+
+* `GET /api/carrinho`
+  Retorna os dados do carrinho do usuário autenticado (itens + valor\_total).
+
+* `POST /api/carrinho/item`
+  Adiciona ou atualiza um item no carrinho:
+
+  ```json
+  {
+    "produto_id": 2,
+    "quantidade": 3
+  }
+  ```
+
+* `PUT /api/carrinho/item/{id}`
+  Atualiza a quantidade do item existente:
+
+  ```json
+  {
+    "quantidade": 5
+  }
+  ```
+
+* `DELETE /api/carrinho/item/{id}`
+  Remove o item do carrinho.
+
+---
+
+## Model Carrinho com lógica de valor total
+
+No `Carrinho.php`:
+
+```php
+public function getValorTotalAttribute()
+{
+    return $this->itens->sum(fn($item) => $item->produto->preco * $item->quantidade);
+}
+```
+
+Valor calculado dinamicamente, sem precisar armazenar no banco.
+
+---
+
+## Testes com Postman
+
+1. Faça login e obtenha o token.
+2. Use o token para chamar `GET /api/carrinho`: deve retornar o carrinho vazio ou criado automaticamente.
+3. Teste os endpoints `/carrinho/item` para adicionar, atualizar ou remover itens.
+4. Verifique se o campo `valor_total` está correto.
+
+---
+
+## Futuras Melhorias
+
+* Adotar **Repositories e Services** para maior organização. (como feito para o Dominio User)
+* Implementar **cache** nos endpoints de listagem.
+* Adicionar **validação adicional** (ex.: estoque de produtos).
+
+---
+
+## Licença
+
+Projeto de aprendizado — livre para uso e adaptação.
